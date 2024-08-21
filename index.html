@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navegador XML</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .chapter {
+            margin-top: 20px;
+        }
+        .verse {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Navegador XML</h1>
+    <input type="file" id="fileInput" />
+    <div id="content"></div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
+                    displayXML(xmlDoc);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function displayXML(xml) {
+            const content = document.getElementById('content');
+            content.innerHTML = '';
+
+            const book = xml.getElementsByTagName('book')[0];
+            const chapters = book.getElementsByTagName('chapter');
+
+            for (let i = 0; i < chapters.length; i++) {
+                const chapter = chapters[i];
+                const chapterNumber = chapter.getAttribute('number');
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = 'chapter';
+                chapterDiv.innerHTML = `<h2>Capítulo ${chapterNumber}</h2>`;
+
+                const verses = chapter.getElementsByTagName('verse');
+                for (let j = 0; j < verses.length; j++) {
+                    const verse = verses[j];
+                    const verseNumber = verse.getAttribute('number');
+                    const verseText = verse.textContent;
+                    const verseDiv = document.createElement('div');
+                    verseDiv.className = 'verse';
+                    verseDiv.innerHTML = `<strong>Versículo ${verseNumber}:</strong> ${verseText}`;
+                    chapterDiv.appendChild(verseDiv);
+                }
+
+                content.appendChild(chapterDiv);
+            }
+        }
+    </script>
+</body>
+</html>
