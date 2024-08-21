@@ -109,10 +109,10 @@
 
         books.forEach(book => {
             const bookButton = document.createElement('button');
-            bookButton.textContent = book.replace('acf-', '').replace('.xml', '').toUpperCase();
-            bookButton.onclick = () => loadBook(book);
+            bookButton.textContent = book.name;
+            bookButton.onclick = () => loadBook(book.file);
 
-            if (book === 'acf-mt.xml' || books.indexOf(book) > books.indexOf('acf-mt.xml')) {
+            if (books.indexOf(book) >= books.indexOf(books.find(b => b.file === 'acf-mt.xml'))) {
                 newTestament.appendChild(bookButton);
             } else {
                 oldTestament.appendChild(bookButton);
@@ -150,7 +150,7 @@
             }
 
             const bookTitle = document.createElement('h2');
-            bookTitle.textContent = book.replace('acf-', '').replace('.xml', '').toUpperCase();
+            bookTitle.textContent = books.find(b => b.file === book).name;
             content.appendChild(bookTitle);
 
             const chapters = bookElement.getElementsByTagName('chapter');
