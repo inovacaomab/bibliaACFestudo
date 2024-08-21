@@ -3,46 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leitor XML - Inovação MAB</title>
+    <title>Navegador da Bíblia</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        .chapter {
+        .book {
             margin-top: 20px;
         }
-        .verse {
+        .chapter {
             margin-left: 20px;
+        }
+        .verse {
+            margin-left: 40px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
-    <h1>Leitor XML - Inovação MAB</h1>
-    <input type="file" id="fileInput" />
+    <h1>Navegador da Bíblia</h1>
+    <div id="bookList"></div>
     <div id="content"></div>
 
     <script>
-        document.getElementById('fileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
-                    displayXML(xmlDoc);
-                };
-                reader.readAsText(file);
-            }
+        const books = [
+            'acf-gn.xml',
+            'acf-ex.xml',
+            'acf-lev.xml',
+            // Adicione todos os livros aqui
+        ];
+
+        const bookList = document.getElementById('bookList');
+        const content = document.getElementById('content');
+
+        books.forEach(book => {
+            const bookButton = document.createElement('button');
+            bookButton.textContent = book.replace('acf-', '').replace('.xml', '').toUpperCase();
+            bookButton.onclick = () => loadBook(book);
+            bookList.appendChild(bookButton);
         });
 
+        function loadBook(book) {
+            console.log(`Tentando carregar o livro: ${book}`);
+            fetch(`/acf/${book}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar o arquivo XML');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log('Arquivo XML carregado com sucesso');
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(data, "text/xml");
+                    displayXML(xmlDoc);
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    content.innerHTML = `<p>Erro ao carregar o livro: ${error.message}</p>`;
+                });
+        }
+
         function displayXML(xml) {
-            const content = document.getElementById('content');
             content.innerHTML = '';
 
             const book = xml.getElementsByTagName('book')[0];
-            const chapters = book.getElementsByTagName('chapter');
+            if (!book) {
+                content.innerHTML = '<p>Erro: Estrutura do XML inválida</p>';
+                return;
+            }
 
+            const chapters = book.getElementsByTagName('chapter');
             for (let i = 0; i < chapters.length; i++) {
                 const chapter = chapters[i];
                 const chapterNumber = chapter.getAttribute('number');
