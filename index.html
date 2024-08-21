@@ -50,7 +50,7 @@
 
         function loadBook(book) {
             console.log(`Tentando carregar o livro: ${book}`);
-            fetch(`/acf/${book}`)
+            fetch(`acf/${book}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Erro ao carregar o arquivo XML');
