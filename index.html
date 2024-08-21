@@ -27,7 +27,10 @@
 </head>
 <body>
     <h1>Navegador da Bíblia ACF</h1>
-    <div id="bookList"></div>
+    <h2>Velho Testamento</h2>
+    <div id="oldTestament"></div>
+    <h2>Novo Testamento</h2>
+    <div id="newTestament"></div>
     <div id="content"></div>
 
     <script>
@@ -101,14 +104,20 @@
             // Adicione todos os livros aqui
         ];
 
-        const bookList = document.getElementById('bookList');
+        const oldTestament = document.getElementById('oldTestament');
+        const newTestament = document.getElementById('newTestament');
         const content = document.getElementById('content');
 
         books.forEach(book => {
             const bookButton = document.createElement('button');
             bookButton.textContent = book.replace('acf-', '').replace('.xml', '').toUpperCase();
             bookButton.onclick = () => loadBook(book);
-            bookList.appendChild(bookButton);
+
+            if (book === 'acf-mt.xml' || books.indexOf(book) > books.indexOf('acf-mt.xml')) {
+                newTestament.appendChild(bookButton);
+            } else {
+                oldTestament.appendChild(bookButton);
+            }
         });
 
         function loadBook(book) {
