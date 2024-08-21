@@ -124,7 +124,7 @@
                     console.log('Arquivo XML carregado com sucesso');
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(data, "text/xml");
-                    displayXML(xmlDoc);
+                    displayXML(xmlDoc, book);
                 })
                 .catch(error => {
                     console.error('Erro:', error);
@@ -132,16 +132,20 @@
                 });
         }
 
-        function displayXML(xml) {
+        function displayXML(xml, book) {
             content.innerHTML = '';
 
-            const book = xml.getElementsByTagName('book')[0];
-            if (!book) {
+            const bookElement = xml.getElementsByTagName('book')[0];
+            if (!bookElement) {
                 content.innerHTML = '<p>Erro: Estrutura do XML inválida</p>';
                 return;
             }
 
-            const chapters = book.getElementsByTagName('chapter');
+            const bookTitle = document.createElement('h2');
+            bookTitle.textContent = book.replace('acf-', '').replace('.xml', '').toUpperCase();
+            content.appendChild(bookTitle);
+
+            const chapters = bookElement.getElementsByTagName('chapter');
             for (let i = 0; i < chapters.length; i++) {
                 const chapter = chapters[i];
                 const chapterNumber = chapter.getAttribute('number');
