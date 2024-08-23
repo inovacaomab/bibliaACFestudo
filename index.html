@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -17,29 +18,22 @@
         }
         .verse {
             margin-left: 40px;
-            cursor: pointer;
-            user-select: text;
         }
         button {
             margin: 5px;
             padding: 10px;
             font-size: 16px;
         }
-        #topButton {
+        .floating-button {
             position: fixed;
             bottom: 20px;
             right: 20px;
+            padding: 10px 15px;
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            display: none;
-        }
-        #topButton:hover {
-            background-color: #0056b3;
         }
     </style>
 </head>
@@ -51,7 +45,8 @@
     <div id="newTestament"></div>
     <div id="content"></div>
 
-    <button id="topButton" onclick="scrollToTop()">Topo</button>
+    <!-- Botão flutuante para rolar para o topo -->
+    <button id="scrollTopButton" class="floating-button" onclick="scrollToTop()">Topo</button>
 
     <script>
         const books = [
@@ -130,7 +125,10 @@
         books.forEach(book => {
             const bookButton = document.createElement('button');
             bookButton.textContent = book.name;
-            bookButton.onclick = () => loadBook(book.file);
+            bookButton.onclick = () => {
+                loadBook(book.file);
+                scrollToContent();
+            };
 
             if (books.indexOf(book) >= books.indexOf(books.find(b => b.file === 'acf-mt.xml'))) {
                 newTestament.appendChild(bookButton);
@@ -140,7 +138,6 @@
         });
 
         function loadBook(book) {
-            console.log(`Tentando carregar o livro: ${book}`);
             fetch(`acf/${book}`)
                 .then(response => {
                     if (!response.ok) {
@@ -149,19 +146,11 @@
                     return response.text();
                 })
                 .then(data => {
-                    console.log('Arquivo XML carregado com sucesso');
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(data, "text/xml");
                     displayXML(xmlDoc, book);
-
-                    // Rolar para o primeiro capítulo após o conteúdo ser exibido
-                    const firstChapter = document.querySelector('.chapter');
-                    if (firstChapter) {
-                        firstChapter.scrollIntoView({ behavior: 'smooth' });
-                    }
                 })
                 .catch(error => {
-                    console.error('Erro:', error);
                     content.innerHTML = `<p>Erro ao carregar o livro: ${error.message}</p>`;
                 });
         }
@@ -195,7 +184,6 @@
                     const verseDiv = document.createElement('div');
                     verseDiv.className = 'verse';
                     verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
-                    verseDiv.onclick = () => selectText(verseDiv);
                     chapterDiv.appendChild(verseDiv);
                 }
 
@@ -203,29 +191,69 @@
             }
         }
 
+        // Função para rolar para o topo
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        window.onscroll = function() {
-            const topButton = document.getElementById('topButton');
-            if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
-                topButton.style.display = "block";
-            } else {
-                topButton.style.display = "none";
-            }
-        };
+        // Função para rolar até o conteúdo
+        function scrollToContent() {
+            content.scrollIntoView({ behavior: 'smooth' });
+        }
 
-        function selectText(element) {
-            if (document.selection) {
-                const range = document.body.createTextRange();
-                range.moveToElementText(element);
-                range.select();
-            } else if (window.getSelection) {
-                const range = document.createRange();
-                range.selectNode(element);
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(range);
+        // Função para iniciar a leitura por voz
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const speech = new SpeechSynthesisUtterance(text);
+                speech.lang = 'pt-BR'; // Define o idioma para português
+                window.speechSynthesis.speak(speech);
+            } else {
+                alert('A leitura por voz não é suportada neste navegador.');
+            }
+        }
+
+        // Adiciona um botão de leitura por voz para cada capítulo
+        function displayXML(xml, book) {
+            content.innerHTML = '';
+
+            const bookElement = xml.getElementsByTagName('book')[0];
+            if (!bookElement) {
+                content.innerHTML = '<p>Erro: Estrutura do XML inválida</p>';
+                return;
+            }
+
+            const bookTitle = document.createElement('h2');
+            bookTitle.textContent = books.find(b => b.file === book).name;
+            content.appendChild(bookTitle);
+
+            const chapters = bookElement.getElementsByTagName('chapter');
+            for (let i = 0; i < chapters.length; i++) {
+                const chapter = chapters[i];
+                const chapterNumber = chapter.getAttribute('number');
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = 'chapter';
+                chapterDiv.innerHTML = `<h2>Capítulo ${chapterNumber}</h2>`;
+
+                const verses = chapter.getElementsByTagName('verse');
+                let chapterText = ''; // Armazena o texto completo do capítulo para leitura por voz
+                for (let j = 0; j < verses.length; j++) {
+                    const verse = verses[j];
+                    const verseNumber = verse.getAttribute('number');
+                    const verseText = verse.textContent;
+                    chapterText += ` ${verseText}`; // Adiciona o texto do versículo ao texto do capítulo
+                    const verseDiv = document.createElement('div');
+                    verseDiv.className = 'verse';
+                    verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
+                    chapterDiv.appendChild(verseDiv);
+                }
+
+                // Botão de leitura por voz para o capítulo
+                const readButton = document.createElement('button');
+                readButton.textContent = 'Ler Capítulo';
+                readButton.onclick = () => speakText(chapterText);
+                chapterDiv.appendChild(readButton);
+
+                content.appendChild(chapterDiv);
             }
         }
     </script>
