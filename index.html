@@ -17,6 +17,8 @@
         }
         .verse {
             margin-left: 40px;
+            cursor: pointer; /* Cursor de mão para indicar que é clicável */
+            user-select: text; /* Permitir a seleção de texto */
         }
         button {
             margin: 5px;
@@ -122,6 +124,7 @@
             { file: 'acf-jd.xml', name: 'Judas' },
             { file: 'acf-ap.xml', name: 'Apocalipse' },
         ];
+
         const oldTestament = document.getElementById('oldTestament');
         const newTestament = document.getElementById('newTestament');
         const content = document.getElementById('content');
@@ -188,6 +191,7 @@
                     const verseDiv = document.createElement('div');
                     verseDiv.className = 'verse';
                     verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
+                    verseDiv.onclick = () => selectText(verseDiv); // Selecionar o texto ao clicar
                     chapterDiv.appendChild(verseDiv);
                 }
 
@@ -209,6 +213,20 @@
                 topButton.style.display = "none";
             }
         };
+
+        // Função para selecionar o texto de um elemento
+        function selectText(element) {
+            if (document.selection) {
+                const range = document.body.createTextRange();
+                range.moveToElementText(element);
+                range.select();
+            } else if (window.getSelection) {
+                const range = document.createRange();
+                range.selectNode(element);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+            }
+        }
     </script>
 </body>
 </html>
