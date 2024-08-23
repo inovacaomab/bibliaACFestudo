@@ -17,15 +17,14 @@
         }
         .verse {
             margin-left: 40px;
-            cursor: pointer; /* Cursor de mão para indicar que é clicável */
-            user-select: text; /* Permitir a seleção de texto */
+            cursor: pointer;
+            user-select: text;
         }
         button {
             margin: 5px;
             padding: 10px;
             font-size: 16px;
         }
-        /* Estilizando o botão flutuante "Topo" */
         #topButton {
             position: fixed;
             bottom: 20px;
@@ -37,7 +36,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            display: none; /* Ocultar o botão inicialmente */
+            display: none;
         }
         #topButton:hover {
             background-color: #0056b3;
@@ -52,7 +51,6 @@
     <div id="newTestament"></div>
     <div id="content"></div>
 
-    <!-- Botão flutuante "Topo" -->
     <button id="topButton" onclick="scrollToTop()">Topo</button>
 
     <script>
@@ -155,6 +153,12 @@
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(data, "text/xml");
                     displayXML(xmlDoc, book);
+
+                    // Rolar para o primeiro capítulo após o conteúdo ser exibido
+                    const firstChapter = document.querySelector('.chapter');
+                    if (firstChapter) {
+                        firstChapter.scrollIntoView({ behavior: 'smooth' });
+                    }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
@@ -191,7 +195,7 @@
                     const verseDiv = document.createElement('div');
                     verseDiv.className = 'verse';
                     verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
-                    verseDiv.onclick = () => selectText(verseDiv); // Selecionar o texto ao clicar
+                    verseDiv.onclick = () => selectText(verseDiv);
                     chapterDiv.appendChild(verseDiv);
                 }
 
@@ -199,12 +203,10 @@
             }
         }
 
-        // Função para rolar a página até o topo
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Mostrar o botão "Topo" quando a página for rolada
         window.onscroll = function() {
             const topButton = document.getElementById('topButton');
             if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
@@ -214,7 +216,6 @@
             }
         };
 
-        // Função para selecionar o texto de um elemento
         function selectText(element) {
             if (document.selection) {
                 const range = document.body.createTextRange();
