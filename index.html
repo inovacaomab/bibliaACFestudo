@@ -57,11 +57,9 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             padding: 10px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             display: none;
-            width: 180px;
+            width: auto;
         }
         .chapter-menu h3 {
             margin-top: 0;
@@ -69,7 +67,7 @@
         }
         .chapter-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(5, 1fr); /* 5 colunas */
             gap: 5px;
         }
         .chapter-menu button {
@@ -84,6 +82,17 @@
         }
         .chapter-menu button:hover {
             background-color: #0056b3;
+        }
+        /* Responsividade */
+        @media (max-width: 600px) {
+            .chapter-menu {
+                width: 100%;
+                right: 0;
+                left: 0;
+            }
+            .chapter-grid {
+                grid-template-columns: repeat(3, 1fr); /* Ajusta para 3 colunas em telas pequenas */
+            }
         }
     </style>
 </head>
@@ -189,9 +198,7 @@
 
         function loadBook(book) {
             console.log(`Tentando carregar o livro: ${book}`);
-            
-            // Esconder o menu de capítulos ao carregar um novo livro
-            chapterMenu.style.display = 'none';
+            chapterMenu.style.display = 'none'; // Esconder o menu de capítulos ao carregar um novo livro
 
             fetch(`acf/${book}`)
                 .then(response => {
@@ -206,7 +213,6 @@
                     const xmlDoc = parser.parseFromString(data, "text/xml");
                     displayXML(xmlDoc, book);
 
-                    // Rolar para o primeiro capítulo após o conteúdo ser exibido
                     const firstChapter = document.querySelector('.chapter');
                     if (firstChapter) {
                         firstChapter.scrollIntoView({ behavior: 'smooth' });
@@ -220,8 +226,8 @@
 
         function displayXML(xml, book) {
             content.innerHTML = '';
-            chapterMenu.innerHTML = '';  // Limpar o menu de capítulos
-            chapterMenu.style.display = 'block';  // Exibir o menu flutuante
+            chapterMenu.innerHTML = ''; // Limpar o menu de capítulos
+            chapterMenu.style.display = 'block'; // Exibir o menu flutuante
 
             const bookElement = xml.getElementsByTagName('book')[0];
             if (!bookElement) {
@@ -235,7 +241,8 @@
 
             const chapters = bookElement.getElementsByTagName('chapter');
             const chapterGrid = document.createElement('div');
-            chapterGrid.className = 'chapter-grid';  // Grid de capítulos
+            chapterGrid.className = 'chapter-grid'; // Grid de capítulos
+
             for (let i = 0; i < chapters.length; i++) {
                 const chapter = chapters[i];
                 const chapterNumber = chapter.getAttribute('number');
@@ -266,12 +273,12 @@
                 chapterGrid.appendChild(chapterButton);
             }
 
-            chapterMenu.appendChild(chapterGrid);  // Adicionar a grid ao menu
+            chapterMenu.appendChild(chapterGrid); // Adicionar a grid ao menu
         }
 
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            chapterMenu.style.display = 'none';  // Esconder o menu flutuante quando for ao topo
+            chapterMenu.style.display = 'none'; // Esconder o menu flutuante quando for ao topo
         }
 
         window.onscroll = function() {
