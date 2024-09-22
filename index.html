@@ -24,14 +24,6 @@
             margin: 5px;
             padding: 10px;
             font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
         }
         #topButton {
             position: fixed;
@@ -49,19 +41,18 @@
         #topButton:hover {
             background-color: #0056b3;
         }
+        .chapter-submenu {
+            display: none;
+            margin-top: 10px;
+        }
+        .active .chapter-submenu {
+            display: block;
+        }
         .chapter-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr); /* 5 colunas */
             gap: 5px;
             margin: 10px 0;
-        }
-        .chapter-submenu {
-            display: none;
-            margin-top: 10px;
-            padding-left: 20px;
-        }
-        .active .chapter-submenu {
-            display: block;
         }
     </style>
 </head>
