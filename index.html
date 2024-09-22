@@ -167,12 +167,12 @@
             }
         });
 
-        function toggleChapterMenu(bookDiv, book) {
+        function toggleChapterMenu(bookDiv, bookFile) {
             const submenu = bookDiv.querySelector('.chapter-submenu');
 
             // Carregar os capítulos se ainda não tiver sido carregado
             if (submenu.innerHTML === '') {
-                loadChapters(submenu, book);
+                loadChapters(submenu, bookFile);
             }
 
             // Alternar visibilidade do submenu
@@ -189,10 +189,8 @@
             bookDivs.forEach(div => div.classList.remove('active'));
         }
 
-        function loadChapters(submenu, book) {
-            console.log(`Tentando carregar o livro: ${book}`);
-
-            fetch(`acf/${book}`)
+        function loadChapters(submenu, bookFile) {
+            fetch(`acf/${bookFile}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Erro ao carregar o arquivo XML');
@@ -200,7 +198,6 @@
                     return response.text();
                 })
                 .then(data => {
-                    console.log('Arquivo XML carregado com sucesso');
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(data, "text/xml");
                     const bookElement = xmlDoc.getElementsByTagName('book')[0];
@@ -216,54 +213,25 @@
 
                     for (let i = 0; i < chapters.length; i++) {
                         const chapterNumber = chapters[i].getAttribute('number');
-
                         const chapterButton = document.createElement('button');
                         chapterButton.textContent = chapterNumber;
-                        chapterButton.onclick = () => scrollToChapter(chapters[i]);
+                        chapterButton.onclick = () => scrollToChapter(chapterNumber);
                         chapterGrid.appendChild(chapterButton);
                     }
 
                     submenu.appendChild(chapterGrid);
                 })
                 .catch(error => {
-                    console.error('Erro:', error);
                     submenu.innerHTML = `<p>Erro ao carregar o livro: ${error.message}</p>`;
                 });
         }
 
-        function scrollToChapter(chapter) {
-            const chapterNumber = chapter.getAttribute('number');
+        function scrollToChapter(chapterNumber) {
             const chapterDiv = document.querySelector(`.chapter[data-number="${chapterNumber}"]`);
             
             if (chapterDiv) {
                 chapterDiv.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                // Exibir o conteúdo do capítulo, se necessário
-                displayChapterContent(chapter);
             }
-        }
-
-        function displayChapterContent(chapter) {
-            content.innerHTML = ''; // Limpar o conteúdo anterior
-
-            const chapterNumber = chapter.getAttribute('number');
-            const chapterDiv = document.createElement('div');
-            chapterDiv.className = 'chapter';
-            chapterDiv.setAttribute('data-number', chapterNumber);
-            chapterDiv.innerHTML = `<h2>Capítulo ${chapterNumber}</h2>`;
-
-            const verses = chapter.getElementsByTagName('verse');
-            for (let j = 0; j < verses.length; j++) {
-                const verseNumber = verses[j].getAttribute('number');
-                const verseText = verses[j].textContent;
-                const verseDiv = document.createElement('div');
-                verseDiv.className = 'verse';
-                verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
-                verseDiv.onclick = () => selectText(verseDiv);
-                chapterDiv.appendChild(verseDiv);
-            }
-
-            content.appendChild(chapterDiv);
         }
 
         function scrollToTop() {
