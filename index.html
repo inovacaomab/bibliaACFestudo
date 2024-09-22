@@ -41,6 +41,19 @@
         #topButton:hover {
             background-color: #0056b3;
         }
+        .chapter-submenu {
+            display: none;
+            margin-top: 10px;
+        }
+        .active .chapter-submenu {
+            display: block;
+        }
+        .chapter-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 colunas */
+            gap: 5px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -128,20 +141,47 @@
         const content = document.getElementById('content');
 
         books.forEach(book => {
+            const bookDiv = document.createElement('div');
+            bookDiv.classList.add('book');
+            
             const bookButton = document.createElement('button');
             bookButton.textContent = book.name;
-            bookButton.onclick = () => loadBook(book.file);
+            bookButton.onclick = () => toggleChapterMenu(bookDiv, book.file);
+            
+            bookDiv.appendChild(bookButton);
+            bookDiv.innerHTML += `<div class="chapter-submenu"></div>`; // Submenu para capítulos
 
             if (books.indexOf(book) >= books.indexOf(books.find(b => b.file === 'acf-mt.xml'))) {
-                newTestament.appendChild(bookButton);
+                newTestament.appendChild(bookDiv);
             } else {
-                oldTestament.appendChild(bookButton);
+                oldTestament.appendChild(bookDiv);
             }
         });
 
-        function loadBook(book) {
-            console.log(`Tentando carregar o livro: ${book}`);
-            fetch(`acf/${book}`)
+        function toggleChapterMenu(bookDiv, bookFile) {
+            const submenu = bookDiv.querySelector('.chapter-submenu');
+
+            // Carregar os capítulos se ainda não tiver sido carregado
+            if (submenu.innerHTML === '') {
+                loadChapters(submenu, bookFile);
+            }
+
+            // Alternar visibilidade do submenu
+            if (bookDiv.classList.contains('active')) {
+                bookDiv.classList.remove('active');
+            } else {
+                closeAllSubmenus(); // Fecha outros submenus abertos
+                bookDiv.classList.add('active');
+            }
+        }
+
+        function closeAllSubmenus() {
+            const bookDivs = document.querySelectorAll('.book');
+            bookDivs.forEach(div => div.classList.remove('active'));
+        }
+
+        function loadChapters(submenu, bookFile) {
+            fetch(`acf/${bookFile}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Erro ao carregar o arquivo XML');
@@ -149,24 +189,53 @@
                     return response.text();
                 })
                 .then(data => {
-                    console.log('Arquivo XML carregado com sucesso');
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(data, "text/xml");
-                    displayXML(xmlDoc, book);
+                    const bookElement = xmlDoc.getElementsByTagName('book')[0];
 
-                    // Rolar para o primeiro capítulo após o conteúdo ser exibido
-                    const firstChapter = document.querySelector('.chapter');
-                    if (firstChapter) {
-                        firstChapter.scrollIntoView({ behavior: 'smooth' });
+                    if (!bookElement) {
+                        submenu.innerHTML = '<p>Erro: Estrutura do XML inválida</p>';
+                        return;
                     }
+
+                    const chapters = bookElement.getElementsByTagName('chapter');
+                    const chapterGrid = document.createElement('div');
+                    chapterGrid.className = 'chapter-grid';
+
+                    for (let i = 0; i < chapters.length; i++) {
+                        const chapterNumber = chapters[i].getAttribute('number');
+                        const chapterButton = document.createElement('button');
+                        chapterButton.textContent = chapterNumber;
+                        chapterButton.onclick = () => loadBook(bookFile, chapterNumber);
+                        chapterGrid.appendChild(chapterButton);
+                    }
+
+                    submenu.appendChild(chapterGrid);
                 })
                 .catch(error => {
-                    console.error('Erro:', error);
+                    submenu.innerHTML = `<p>Erro ao carregar o livro: ${error.message}</p>`;
+                });
+        }
+
+        function loadBook(bookFile, chapterNumber) {
+            fetch(`acf/${bookFile}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar o arquivo XML');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(data, "text/xml");
+                    displayXML(xmlDoc, chapterNumber);
+                })
+                .catch(error => {
                     content.innerHTML = `<p>Erro ao carregar o livro: ${error.message}</p>`;
                 });
         }
 
-        function displayXML(xml, book) {
+        function displayXML(xml, chapterNumber) {
             content.innerHTML = '';
 
             const bookElement = xml.getElementsByTagName('book')[0];
@@ -175,31 +244,31 @@
                 return;
             }
 
-            const bookTitle = document.createElement('h2');
-            bookTitle.textContent = books.find(b => b.file === book).name;
-            content.appendChild(bookTitle);
-
             const chapters = bookElement.getElementsByTagName('chapter');
             for (let i = 0; i < chapters.length; i++) {
                 const chapter = chapters[i];
-                const chapterNumber = chapter.getAttribute('number');
-                const chapterDiv = document.createElement('div');
-                chapterDiv.className = 'chapter';
-                chapterDiv.innerHTML = `<h2>Capítulo ${chapterNumber}</h2>`;
+                const chapterNum = chapter.getAttribute('number');
 
-                const verses = chapter.getElementsByTagName('verse');
-                for (let j = 0; j < verses.length; j++) {
-                    const verse = verses[j];
-                    const verseNumber = verse.getAttribute('number');
-                    const verseText = verse.textContent;
-                    const verseDiv = document.createElement('div');
-                    verseDiv.className = 'verse';
-                    verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
-                    verseDiv.onclick = () => selectText(verseDiv);
-                    chapterDiv.appendChild(verseDiv);
+                if (chapterNum == chapterNumber) {
+                    const chapterDiv = document.createElement('div');
+                    chapterDiv.className = 'chapter';
+                    chapterDiv.setAttribute('data-number', chapterNumber);
+                    chapterDiv.innerHTML = `<h2>Capítulo ${chapterNum}</h2>`;
+
+                    const verses = chapter.getElementsByTagName('verse');
+                    for (let j = 0; j < verses.length; j++) {
+                        const verse = verses[j];
+                        const verseNumber = verse.getAttribute('number');
+                        const verseText = verse.textContent;
+                        const verseDiv = document.createElement('div');
+                        verseDiv.className = 'verse';
+                        verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
+                        verseDiv.onclick = () => selectText(verseDiv);
+                        chapterDiv.appendChild(verseDiv);
+                    }
+
+                    content.appendChild(chapterDiv);
                 }
-
-                content.appendChild(chapterDiv);
             }
         }
 
