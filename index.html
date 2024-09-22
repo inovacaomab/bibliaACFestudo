@@ -24,6 +24,14 @@
             margin: 5px;
             padding: 10px;
             font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
         #topButton {
             position: fixed;
@@ -53,20 +61,23 @@
             overflow-y: auto;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             display: none;
+            width: 180px;
         }
         .chapter-menu h3 {
             margin-top: 0;
             font-size: 18px;
         }
+        .chapter-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
         .chapter-menu button {
-            display: block;
-            width: 100%;
-            margin-bottom: 5px;
             background-color: #007bff;
             color: white;
             border: none;
             padding: 8px;
-            text-align: left;
+            text-align: center;
             cursor: pointer;
             font-size: 16px;
             border-radius: 3px;
@@ -223,6 +234,8 @@
             content.appendChild(bookTitle);
 
             const chapters = bookElement.getElementsByTagName('chapter');
+            const chapterGrid = document.createElement('div');
+            chapterGrid.className = 'chapter-grid';  // Grid de capítulos
             for (let i = 0; i < chapters.length; i++) {
                 const chapter = chapters[i];
                 const chapterNumber = chapter.getAttribute('number');
@@ -246,12 +259,14 @@
 
                 // Criar um botão no menu para cada capítulo
                 const chapterButton = document.createElement('button');
-                chapterButton.textContent = `Capítulo ${chapterNumber}`;
+                chapterButton.textContent = chapterNumber;
                 chapterButton.onclick = () => {
                     chapterDiv.scrollIntoView({ behavior: 'smooth' });
                 };
-                chapterMenu.appendChild(chapterButton);
+                chapterGrid.appendChild(chapterButton);
             }
+
+            chapterMenu.appendChild(chapterGrid);  // Adicionar a grid ao menu
         }
 
         function scrollToTop() {
