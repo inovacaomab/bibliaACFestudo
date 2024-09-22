@@ -41,6 +41,39 @@
         #topButton:hover {
             background-color: #0056b3;
         }
+        .chapter-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .chapter-menu h3 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+        .chapter-menu button {
+            display: block;
+            width: 100%;
+            margin-bottom: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 3px;
+        }
+        .chapter-menu button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -50,6 +83,9 @@
     <h2>Novo Testamento</h2>
     <div id="newTestament"></div>
     <div id="content"></div>
+
+    <!-- Menu flutuante para os capítulos -->
+    <div id="chapterMenu" class="chapter-menu"></div>
 
     <button id="topButton" onclick="scrollToTop()">Topo</button>
 
@@ -126,6 +162,7 @@
         const oldTestament = document.getElementById('oldTestament');
         const newTestament = document.getElementById('newTestament');
         const content = document.getElementById('content');
+        const chapterMenu = document.getElementById('chapterMenu');
 
         books.forEach(book => {
             const bookButton = document.createElement('button');
@@ -141,6 +178,10 @@
 
         function loadBook(book) {
             console.log(`Tentando carregar o livro: ${book}`);
+            
+            // Esconder o menu de capítulos ao carregar um novo livro
+            chapterMenu.style.display = 'none';
+
             fetch(`acf/${book}`)
                 .then(response => {
                     if (!response.ok) {
@@ -168,6 +209,8 @@
 
         function displayXML(xml, book) {
             content.innerHTML = '';
+            chapterMenu.innerHTML = '';  // Limpar o menu de capítulos
+            chapterMenu.style.display = 'block';  // Exibir o menu flutuante
 
             const bookElement = xml.getElementsByTagName('book')[0];
             if (!bookElement) {
@@ -200,11 +243,20 @@
                 }
 
                 content.appendChild(chapterDiv);
+
+                // Criar um botão no menu para cada capítulo
+                const chapterButton = document.createElement('button');
+                chapterButton.textContent = `Capítulo ${chapterNumber}`;
+                chapterButton.onclick = () => {
+                    chapterDiv.scrollIntoView({ behavior: 'smooth' });
+                };
+                chapterMenu.appendChild(chapterButton);
             }
         }
 
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            chapterMenu.style.display = 'none';  // Esconder o menu flutuante quando for ao topo
         }
 
         window.onscroll = function() {
