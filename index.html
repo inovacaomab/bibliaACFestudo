@@ -49,50 +49,19 @@
         #topButton:hover {
             background-color: #0056b3;
         }
-        .chapter-menu {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            display: none;
-            width: auto;
-        }
-        .chapter-menu h3 {
-            margin-top: 0;
-            font-size: 18px;
-        }
         .chapter-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr); /* 5 colunas */
             gap: 5px;
+            margin: 10px 0;
         }
-        .chapter-menu button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px;
-            text-align: center;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 3px;
+        .chapter-submenu {
+            display: none;
+            margin-top: 10px;
+            padding-left: 20px;
         }
-        .chapter-menu button:hover {
-            background-color: #0056b3;
-        }
-        /* Responsividade */
-        @media (max-width: 600px) {
-            .chapter-menu {
-                width: 100%;
-                right: 0;
-                left: 0;
-            }
-            .chapter-grid {
-                grid-template-columns: repeat(3, 1fr); /* Ajusta para 3 colunas em telas pequenas */
-            }
+        .active .chapter-submenu {
+            display: block;
         }
     </style>
 </head>
@@ -103,9 +72,6 @@
     <h2>Novo Testamento</h2>
     <div id="newTestament"></div>
     <div id="content"></div>
-
-    <!-- Menu flutuante para os capítulos -->
-    <div id="chapterMenu" class="chapter-menu"></div>
 
     <button id="topButton" onclick="scrollToTop()">Topo</button>
 
@@ -182,23 +148,49 @@
         const oldTestament = document.getElementById('oldTestament');
         const newTestament = document.getElementById('newTestament');
         const content = document.getElementById('content');
-        const chapterMenu = document.getElementById('chapterMenu');
 
         books.forEach(book => {
+            const bookDiv = document.createElement('div');
+            bookDiv.classList.add('book');
+            
             const bookButton = document.createElement('button');
             bookButton.textContent = book.name;
-            bookButton.onclick = () => loadBook(book.file);
+            bookButton.onclick = () => toggleChapterMenu(bookDiv, book.file);
+            
+            bookDiv.appendChild(bookButton);
+            bookDiv.innerHTML += `<div class="chapter-submenu"></div>`; // Submenu para capítulos
 
             if (books.indexOf(book) >= books.indexOf(books.find(b => b.file === 'acf-mt.xml'))) {
-                newTestament.appendChild(bookButton);
+                newTestament.appendChild(bookDiv);
             } else {
-                oldTestament.appendChild(bookButton);
+                oldTestament.appendChild(bookDiv);
             }
         });
 
-        function loadBook(book) {
+        function toggleChapterMenu(bookDiv, book) {
+            const submenu = bookDiv.querySelector('.chapter-submenu');
+
+            // Carregar os capítulos se ainda não tiver sido carregado
+            if (submenu.innerHTML === '') {
+                loadChapters(submenu, book);
+            }
+
+            // Alternar visibilidade do submenu
+            if (bookDiv.classList.contains('active')) {
+                bookDiv.classList.remove('active');
+            } else {
+                closeAllSubmenus(); // Fecha outros submenus abertos
+                bookDiv.classList.add('active');
+            }
+        }
+
+        function closeAllSubmenus() {
+            const bookDivs = document.querySelectorAll('.book');
+            bookDivs.forEach(div => div.classList.remove('active'));
+        }
+
+        function loadChapters(submenu, book) {
             console.log(`Tentando carregar o livro: ${book}`);
-            chapterMenu.style.display = 'none'; // Esconder o menu de capítulos ao carregar um novo livro
 
             fetch(`acf/${book}`)
                 .then(response => {
@@ -211,74 +203,71 @@
                     console.log('Arquivo XML carregado com sucesso');
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(data, "text/xml");
-                    displayXML(xmlDoc, book);
+                    const bookElement = xmlDoc.getElementsByTagName('book')[0];
 
-                    const firstChapter = document.querySelector('.chapter');
-                    if (firstChapter) {
-                        firstChapter.scrollIntoView({ behavior: 'smooth' });
+                    if (!bookElement) {
+                        submenu.innerHTML = '<p>Erro: Estrutura do XML inválida</p>';
+                        return;
                     }
+
+                    const chapters = bookElement.getElementsByTagName('chapter');
+                    const chapterGrid = document.createElement('div');
+                    chapterGrid.className = 'chapter-grid';
+
+                    for (let i = 0; i < chapters.length; i++) {
+                        const chapterNumber = chapters[i].getAttribute('number');
+
+                        const chapterButton = document.createElement('button');
+                        chapterButton.textContent = chapterNumber;
+                        chapterButton.onclick = () => scrollToChapter(chapters[i]);
+                        chapterGrid.appendChild(chapterButton);
+                    }
+
+                    submenu.appendChild(chapterGrid);
                 })
                 .catch(error => {
                     console.error('Erro:', error);
-                    content.innerHTML = `<p>Erro ao carregar o livro: ${error.message}</p>`;
+                    submenu.innerHTML = `<p>Erro ao carregar o livro: ${error.message}</p>`;
                 });
         }
 
-        function displayXML(xml, book) {
-            content.innerHTML = '';
-            chapterMenu.innerHTML = ''; // Limpar o menu de capítulos
-            chapterMenu.style.display = 'block'; // Exibir o menu flutuante
+        function scrollToChapter(chapter) {
+            const chapterNumber = chapter.getAttribute('number');
+            const chapterDiv = document.querySelector(`.chapter[data-number="${chapterNumber}"]`);
+            
+            if (chapterDiv) {
+                chapterDiv.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                // Exibir o conteúdo do capítulo, se necessário
+                displayChapterContent(chapter);
+            }
+        }
 
-            const bookElement = xml.getElementsByTagName('book')[0];
-            if (!bookElement) {
-                content.innerHTML = '<p>Erro: Estrutura do XML inválida</p>';
-                return;
+        function displayChapterContent(chapter) {
+            content.innerHTML = ''; // Limpar o conteúdo anterior
+
+            const chapterNumber = chapter.getAttribute('number');
+            const chapterDiv = document.createElement('div');
+            chapterDiv.className = 'chapter';
+            chapterDiv.setAttribute('data-number', chapterNumber);
+            chapterDiv.innerHTML = `<h2>Capítulo ${chapterNumber}</h2>`;
+
+            const verses = chapter.getElementsByTagName('verse');
+            for (let j = 0; j < verses.length; j++) {
+                const verseNumber = verses[j].getAttribute('number');
+                const verseText = verses[j].textContent;
+                const verseDiv = document.createElement('div');
+                verseDiv.className = 'verse';
+                verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
+                verseDiv.onclick = () => selectText(verseDiv);
+                chapterDiv.appendChild(verseDiv);
             }
 
-            const bookTitle = document.createElement('h2');
-            bookTitle.textContent = books.find(b => b.file === book).name;
-            content.appendChild(bookTitle);
-
-            const chapters = bookElement.getElementsByTagName('chapter');
-            const chapterGrid = document.createElement('div');
-            chapterGrid.className = 'chapter-grid'; // Grid de capítulos
-
-            for (let i = 0; i < chapters.length; i++) {
-                const chapter = chapters[i];
-                const chapterNumber = chapter.getAttribute('number');
-                const chapterDiv = document.createElement('div');
-                chapterDiv.className = 'chapter';
-                chapterDiv.innerHTML = `<h2>Capítulo ${chapterNumber}</h2>`;
-
-                const verses = chapter.getElementsByTagName('verse');
-                for (let j = 0; j < verses.length; j++) {
-                    const verse = verses[j];
-                    const verseNumber = verse.getAttribute('number');
-                    const verseText = verse.textContent;
-                    const verseDiv = document.createElement('div');
-                    verseDiv.className = 'verse';
-                    verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
-                    verseDiv.onclick = () => selectText(verseDiv);
-                    chapterDiv.appendChild(verseDiv);
-                }
-
-                content.appendChild(chapterDiv);
-
-                // Criar um botão no menu para cada capítulo
-                const chapterButton = document.createElement('button');
-                chapterButton.textContent = chapterNumber;
-                chapterButton.onclick = () => {
-                    chapterDiv.scrollIntoView({ behavior: 'smooth' });
-                };
-                chapterGrid.appendChild(chapterButton);
-            }
-
-            chapterMenu.appendChild(chapterGrid); // Adicionar a grid ao menu
+            content.appendChild(chapterDiv);
         }
 
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            chapterMenu.style.display = 'none'; // Esconder o menu flutuante quando for ao topo
         }
 
         window.onscroll = function() {
