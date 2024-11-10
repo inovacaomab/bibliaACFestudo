@@ -1,61 +1,30 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Livros do Novo Testamento</title>
+    <title>Navegador da Bíblia ACF</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
+        .book {
+            margin-top: 20px;
         }
-
-        .menu {
-            margin-bottom: 20px;
-            text-align: center;
+        .chapter {
+            margin-left: 20px;
         }
-
-        .menu a {
-            margin-right: 10px;
-            padding: 10px 20px;
-            background-color: #2c3e50;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
+        .verse {
+            margin-left: 40px;
+            cursor: pointer;
+            user-select: text;
         }
-
-        .menu a:hover {
-            background-color: #34495e;
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
         }
-
-        iframe {
-            width: 100%;
-            height: 500px;
-            border: none;
-            display: block;
-            margin: 20px 0;
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .menu a {
-                display: block;
-                margin: 5px 0;
-                width: 100%;
-                text-align: center;
-            }
-
-            iframe {
-                height: 400px; /* Menor altura para dispositivos móveis */
-            }
-        }
-
-        /* Estilo para o botão de voltar ao topo */
         #topButton {
             position: fixed;
             bottom: 20px;
@@ -69,42 +38,175 @@
             font-size: 16px;
             display: none;
         }
-
         #topButton:hover {
             background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <h1>Livros do Novo Testamento</h1>
-    <div class="menu">
-        <a href="#" onclick="loadBook('Mateus')">Mateus</a>
-        <a href="#" onclick="loadBook('Marcos')">Marcos</a>
-        <a href="#" onclick="loadBook('Lucas')">Lucas</a>
-        <a href="#" onclick="loadBook('Joao')">João</a>
-        <!-- Adicione mais livros conforme necessário -->
-    </div>
+    <h1>Navegador da Bíblia ACF</h1>
+    <h2>Velho Testamento</h2>
+    <div id="oldTestament"></div>
+    <h2>Novo Testamento</h2>
+    <div id="newTestament"></div>
+    <div id="content"></div>
 
-    <!-- Espaço para o iframe carregar o conteúdo do livro -->
-    <iframe id="bookIframe" src="" title="Livro"></iframe>
-
-    <!-- Botão de voltar ao topo -->
     <button id="topButton" onclick="scrollToTop()">Topo</button>
 
     <script>
-        function loadBook(bookName) {
-            // Caminho para o arquivo HTML do livro
-            const filePath = `livros/${bookName}.html`;
+        const books = [
+            { file: 'acf-gn.xml', name: 'Gênesis' },
+            { file: 'acf-ex.xml', name: 'Êxodo' },
+            { file: 'acf-lv.xml', name: 'Levítico' },
+            { file: 'acf-nm.xml', name: 'Números' },
+            { file: 'acf-dt.xml', name: 'Deuteronômio' },
+            { file: 'acf-js.xml', name: 'Josué' },
+            { file: 'acf-jz.xml', name: 'Juízes' },
+            { file: 'acf-rt.xml', name: 'Rute' },
+            { file: 'acf-1sm.xml', name: '1 Samuel' },
+            { file: 'acf-2sm.xml', name: '2 Samuel' },
+            { file: 'acf-1rs.xml', name: '1 Reis' },
+            { file: 'acf-2rs.xml', name: '2 Reis' },
+            { file: 'acf-1cr.xml', name: '1 Crônicas' },
+            { file: 'acf-2cr.xml', name: '2 Crônicas' },
+            { file: 'acf-ed.xml', name: 'Esdras' },
+            { file: 'acf-ne.xml', name: 'Neemias' },
+            { file: 'acf-et.xml', name: 'Ester' },
+            { file: 'acf-job.xml', name: 'Jó' },
+            { file: 'acf-sl.xml', name: 'Salmos' },
+            { file: 'acf-pv.xml', name: 'Provérbios' },
+            { file: 'acf-ec.xml', name: 'Eclesiastes' },
+            { file: 'acf-ct.xml', name: 'Cânticos' },
+            { file: 'acf-is.xml', name: 'Isaías' },
+            { file: 'acf-jr.xml', name: 'Jeremias' },
+            { file: 'acf-lm.xml', name: 'Lamentações' },
+            { file: 'acf-ez.xml', name: 'Ezequiel' },
+            { file: 'acf-dn.xml', name: 'Daniel' },
+            { file: 'acf-os.xml', name: 'Oséias' },
+            { file: 'acf-jl.xml', name: 'Joel' },
+            { file: 'acf-am.xml', name: 'Amós' },
+            { file: 'acf-ob.xml', name: 'Obadias' },
+            { file: 'acf-jn.xml', name: 'Jonas' },
+            { file: 'acf-mq.xml', name: 'Miquéias' },
+            { file: 'acf-na.xml', name: 'Naum' },
+            { file: 'acf-hc.xml', name: 'Habacuque' },
+            { file: 'acf-sf.xml', name: 'Sofonias' },
+            { file: 'acf-ag.xml', name: 'Ageu' },
+            { file: 'acf-zc.xml', name: 'Zacarias' },
+            { file: 'acf-ml.xml', name: 'Malaquias' },
+            { file: 'acf-mt.xml', name: 'Mateus' },
+            { file: 'acf-mc.xml', name: 'Marcos' },
+            { file: 'acf-lc.xml', name: 'Lucas' },
+            { file: 'acf-jo.xml', name: 'João' },
+            { file: 'acf-at.xml', name: 'Atos' },
+            { file: 'acf-rm.xml', name: 'Romanos' },
+            { file: 'acf-1co.xml', name: '1 Coríntios' },
+            { file: 'acf-2co.xml', name: '2 Coríntios' },
+            { file: 'acf-gl.xml', name: 'Gálatas' },
+            { file: 'acf-ef.xml', name: 'Efésios' },
+            { file: 'acf-fp.xml', name: 'Filipenses' },
+            { file: 'acf-cl.xml', name: 'Colossenses' },
+            { file: 'acf-1ts.xml', name: '1 Tessalonicenses' },
+            { file: 'acf-2ts.xml', name: '2 Tessalonicenses' },
+            { file: 'acf-1tm.xml', name: '1 Timóteo' },
+            { file: 'acf-2tm.xml', name: '2 Timóteo' },
+            { file: 'acf-tt.xml', name: 'Tito' },
+            { file: 'acf-fm.xml', name: 'Filemom' },
+            { file: 'acf-hb.xml', name: 'Hebreus' },
+            { file: 'acf-tg.xml', name: 'Tiago' },
+            { file: 'acf-1pe.xml', name: '1 Pedro' },
+            { file: 'acf-2pe.xml', name: '2 Pedro' },
+            { file: 'acf-1jo.xml', name: '1 João' },
+            { file: 'acf-2jo.xml', name: '2 João' },
+            { file: 'acf-3jo.xml', name: '3 João' },
+            { file: 'acf-jd.xml', name: 'Judas' },
+            { file: 'acf-ap.xml', name: 'Apocalipse' },
+        ];
 
-            // Atualiza o src do iframe para carregar o livro
-            document.getElementById('bookIframe').src = filePath;
+        const oldTestament = document.getElementById('oldTestament');
+        const newTestament = document.getElementById('newTestament');
+        const content = document.getElementById('content');
+
+        books.forEach(book => {
+            const bookButton = document.createElement('button');
+            bookButton.textContent = book.name;
+            bookButton.onclick = () => loadBook(book.file);
+
+            if (books.indexOf(book) >= books.indexOf(books.find(b => b.file === 'acf-mt.xml'))) {
+                newTestament.appendChild(bookButton);
+            } else {
+                oldTestament.appendChild(bookButton);
+            }
+        });
+
+        function loadBook(book) {
+            console.log(Tentando carregar o livro: ${book});
+            fetch(acf/${book})
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar o arquivo XML');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log('Arquivo XML carregado com sucesso');
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(data, "text/xml");
+                    displayXML(xmlDoc, book);
+
+                    // Rolar para o primeiro capítulo após o conteúdo ser exibido
+                    const firstChapter = document.querySelector('.chapter');
+                    if (firstChapter) {
+                        firstChapter.scrollIntoView({ behavior: 'smooth' });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    content.innerHTML = <p>Erro ao carregar o livro: ${error.message}</p>;
+                });
+        }
+
+        function displayXML(xml, book) {
+            content.innerHTML = '';
+
+            const bookElement = xml.getElementsByTagName('book')[0];
+            if (!bookElement) {
+                content.innerHTML = '<p>Erro: Estrutura do XML inválida</p>';
+                return;
+            }
+
+            const bookTitle = document.createElement('h2');
+            bookTitle.textContent = books.find(b => b.file === book).name;
+            content.appendChild(bookTitle);
+
+            const chapters = bookElement.getElementsByTagName('chapter');
+            for (let i = 0; i < chapters.length; i++) {
+                const chapter = chapters[i];
+                const chapterNumber = chapter.getAttribute('number');
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = 'chapter';
+                chapterDiv.innerHTML = <h2>Capítulo ${chapterNumber}</h2>;
+
+                const verses = chapter.getElementsByTagName('verse');
+                for (let j = 0; j < verses.length; j++) {
+                    const verse = verses[j];
+                    const verseNumber = verse.getAttribute('number');
+                    const verseText = verse.textContent;
+                    const verseDiv = document.createElement('div');
+                    verseDiv.className = 'verse';
+                    verseDiv.innerHTML = <strong>${verseNumber}</strong> ${verseText};
+                    verseDiv.onclick = () => selectText(verseDiv);
+                    chapterDiv.appendChild(verseDiv);
+                }
+
+                content.appendChild(chapterDiv);
+            }
         }
 
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Mostrar ou esconder o botão de voltar ao topo
         window.onscroll = function() {
             const topButton = document.getElementById('topButton');
             if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
@@ -113,6 +215,19 @@
                 topButton.style.display = "none";
             }
         };
+
+        function selectText(element) {
+            if (document.selection) {
+                const range = document.body.createTextRange();
+                range.moveToElementText(element);
+                range.select();
+            } else if (window.getSelection) {
+                const range = document.createRange();
+                range.selectNode(element);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+            }
+        }
     </script>
 </body>
 </html>
