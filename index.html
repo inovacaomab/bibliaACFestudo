@@ -140,8 +140,8 @@
         });
 
         function loadBook(book) {
-            console.log(Tentando carregar o livro: ${book});
-            fetch(acf/${book})
+            console.log(`Tentando carregar o livro: ${book}`);
+            fetch(`acf/${book}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Erro ao carregar o arquivo XML');
@@ -162,7 +162,7 @@
                 })
                 .catch(error => {
                     console.error('Erro:', error);
-                    content.innerHTML = <p>Erro ao carregar o livro: ${error.message}</p>;
+                    content.innerHTML = `<p>Erro ao carregar o livro: ${error.message}</p>`;
                 });
         }
 
@@ -185,7 +185,7 @@
                 const chapterNumber = chapter.getAttribute('number');
                 const chapterDiv = document.createElement('div');
                 chapterDiv.className = 'chapter';
-                chapterDiv.innerHTML = <h2>Capítulo ${chapterNumber}</h2>;
+                chapterDiv.innerHTML = `<h2>Capítulo ${chapterNumber}</h2>`;
 
                 const verses = chapter.getElementsByTagName('verse');
                 for (let j = 0; j < verses.length; j++) {
@@ -194,7 +194,7 @@
                     const verseText = verse.textContent;
                     const verseDiv = document.createElement('div');
                     verseDiv.className = 'verse';
-                    verseDiv.innerHTML = <strong>${verseNumber}</strong> ${verseText};
+                    verseDiv.innerHTML = `<strong>${verseNumber}</strong> ${verseText}`;
                     verseDiv.onclick = () => selectText(verseDiv);
                     chapterDiv.appendChild(verseDiv);
                 }
